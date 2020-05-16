@@ -1,0 +1,36 @@
+[Global]
+  CheckNewVersion = true
+  SendAnonymousUsage = true
+
+[entryPoints]
+  [entryPoints.web]
+    address = ":80"
+
+  [entryPoints.web-secure]
+    address = ":443"
+
+  [entryPoints.ssh]
+    address = ":2222"
+
+[providers]
+
+  [providers.docker]
+    # Connection to docker host system (docker.sock)
+    endpoint = "unix:///var/run/docker.sock"
+    watch = true
+    # This will hide all docker containers that don't have explicitly
+    # set label to "enable"
+    exposedbydefault = false
+    swarmMode = false
+
+  [providers.file]
+    directory = "/etc/traefik/configs"
+    watch = true
+
+[API]
+  Dashboard = true
+#  insecure = true
+  debug = true
+
+[serversTransport]
+  insecureSkipVerify = true

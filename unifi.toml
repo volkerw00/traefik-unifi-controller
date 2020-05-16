@@ -1,0 +1,16 @@
+[tcp]
+  [tcp.routers]
+    [tcp.routers.unifi]
+      entryPoints = ["web-secure"]
+      rule = "HostSNI(`unifi.example.com`)"
+      service = "unifi"
+      [tcp.routers.unifi.tls]
+        passthrough = true
+        [[tcp.routers.unifi.tls.domains]]
+          main = "unifi.example.com"
+
+  [tcp.services]
+    [tcp.services.unifi]
+      [tcp.services.unifi.loadBalancer]
+        [[tcp.services.unifi.loadBalancer.servers]]
+          address = "<host-ip>:8443"

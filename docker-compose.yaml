@@ -1,0 +1,60 @@
+version: "3.3"
+
+services:
+
+  traefik:
+    image: traefik:v2.2.0
+    container_name: traefik
+    command:
+       - --log.level=DEBUG
+    labels:
+      - traefik.enable=true
+
+      - traefik.docker.network=traefik-proxy
+    ports:
+        # - "2222:2222" # The SSH port
+      - "80:80" # The HTTP port
+        #  - "8080:8080" # The Web UI (enabled by --api)
+      - "443:443" # The HTTPS port
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik.toml:/etc/traefik/traefik.toml
+      - ./unifi.toml:/etc/traefik/configs/unifi.toml
+    networks:
+      - default
+      - traefik-proxy
+  
+  unifi-controller:
+    image: linuxserver/unifi-controller:5.12.66-ls57
+    container_name: unifi-controller
+    environment:
+      - PUID=1000
+      - PGID=1000
+    labels:
+      # not working like that, see unifi.toml
+      - traefik.enable=false
+
+      - traefik.tcp.routers.unifi.entrypoints=web-secure
+      - traefik.tcp.routers.unifi.rule=HostSNI(`unifi.example.com`)
+      - traefik.tcp.routers.unifi.tls=true
+      - traefik.tcp.routers.unifi.tls.passthrough=true
+      - traefik.tcp.routers.unifi.tls.domains[0].main=unifi.example.com
+      - treafik.tcp.routers.unifi.service=unifi
+      - traefik.tcp.services.unifi.loadbalancer.server.port=8443
+
+    volumes:
+      - /opt/docks/unifi:/config
+    ports:
+      - 3478:3478/udp
+      - 10001:10001/udp
+      - 8080:8080
+      - 8081:8081
+      - 8443:8443
+      - 8843:8843
+      - 8880:8880
+      - 6789:6789
+    restart: unless-stopped
+    
+networks:
+  traefik-proxy:
+    external: true
